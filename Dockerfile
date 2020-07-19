@@ -16,7 +16,6 @@ RUN --mount=target=. \
   --mount=type=cache,target=/root/.cache/go-build \
   GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /out/example .
 
-
 FROM base AS unit-test
 RUN --mount=target=. \
   --mount=type=cache,target=/root/.cache/go-build \
