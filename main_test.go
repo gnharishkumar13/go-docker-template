@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+
 func TestEcho(t *testing.T) {
 	// Test happy path
 	err := echo([]string{"bin-name", "hello", "world!"})
