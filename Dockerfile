@@ -3,22 +3,34 @@
 ##To do this, you will need to use BuildKit’s Dockerfile frontend (https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md). 
 
 
-FROM --platform=${BUILDPLATFORM} golang:1.14.3-alpine AS base
+FROM --platform=${BUILDPLATFORM} golang:1.14.6-alpine AS base
 WORKDIR /src
 ENV CGO_ENABLED=0
 COPY go.* .
 RUN go mod download
-COPY . .
 
 FROM base AS build
 ARG TARGETOS
 ARG TARGETARCH
-RUN --mount=type=cache,target=/root/.cache/go-build \
-GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /out/example .
+RUN --mount=target=. \
+  --mount=type=cache,target=/root/.cache/go-build \
+  GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /out/example .
+
 
 FROM base AS unit-test
-RUN --mount=type=cache,target=/root/.cache/go-build \
-go test -v .
+RUN --mount=target=. \
+  --mount=type=cache,target=/root/.cache/go-build \
+  go test -v .
+
+FROM golangci/golangci-lint:v1.28.3-alpine AS lint-base 
+
+FROM base AS lint
+COPY --from=lint-base /usr/bin/golangci-lint /usr/bin/golangci-lint
+RUN --mount=target=. \
+  --mount=from=lint-base,src=/usr/bin/golangci-lint,target=/usr/bin/golangci-lint \
+  --mount=type=cache,target=/root/.cache/go-build \
+  --mount=type=cache,target=/root/.cache/golangci-lint \
+  golangci-lint run --timeout 10m0s ./... 
 
 #scratch
 FROM scratch AS bin-unix
