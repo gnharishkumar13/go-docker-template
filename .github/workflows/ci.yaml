@@ -19,3 +19,11 @@ jobs:
        run: make PLATFORM=linux/amd64
      - name: Build Windows binary
        run: make PLATFORM=windows/amd64
+     - name: Build and push Docker images
+       uses: docker/build-push-action@v1
+       with:
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKER_PASSWORD }}
+         repository: gnharishkumar/repo
+         tag_with_ref: true
+         tag_with_sha: true
